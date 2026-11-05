@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Contracts;
-using Orbis.Catalog.Api.Data;
-using Orbis.Catalog.Api.Domain;
 
 namespace Orbis.Catalog.Api.Endpoints;
 
@@ -9,80 +8,59 @@ public static class ProductEndpoints
 {
     public static IEndpointRouteBuilder MapProductEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/products").WithTags("Products");
+        var group = app.MapGroup("/api/products")
+            .WithTags("Products");
 
         group.MapPost("/", async (
             CreateProductRequest request,
-            CatalogDbContext db,
+            IProductService service,
             CancellationToken ct) =>
         {
-            Product product;
-
-            try
-            {
-                product = new Product(
-                    request.Name,
-                    request.Sku,
-                    request.Price
-                );
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(
-                    new { error = ex.Message });
-            }
-
-            var skuExists = await db.Products
-                .AnyAsync(p => p.Sku == product.Sku, ct);
-
-            if (skuExists)
-            {
-                return Results.Conflict(
-                    new { error = "SKU já cadastrado." });
-            }
-
-            db.Products.Add(product);
-
-            await db.SaveChangesAsync(ct);
-
-            return Results.Created(
-                $"/api/products/{product.Id}",
-                ProductResponse.FromEntity(product)
+            var result = await service.CreateAsync(
+                request,
+                ct
             );
+
+            return result.Status switch
+            {
+                CreateProductStatus.Created =>
+                    Results.Created(
+                        $"/api/products/{result.Product!.Id}",
+                        result.Product
+                    ),
+
+                CreateProductStatus.DuplicateSku =>
+                    Results.Conflict(
+                        new { error = result.Error }
+                    ),
+
+                CreateProductStatus.Invalid =>
+                    Results.BadRequest(
+                        new { error = result.Error }
+                    ),
+
+                _ => Results.StatusCode(500)
+            };
         });
 
         group.MapGet("/", async (
-            CatalogDbContext db,
+            IProductService service,
             CancellationToken ct) =>
         {
-            var products = await db.Products
-                .AsNoTracking()
-                .OrderBy(p => p.Name)
-                .Select(p => new ProductResponse(
-                    p.Id,
-                    p.Name,
-                    p.Sku,
-                    p.Price,
-                    p.CreatedAt
-                ))
-                .ToListAsync(ct);
-
+            var products = await service.GetAllAsync(ct);
             return Results.Ok(products);
         });
 
         group.MapGet("/{id:guid}", async (
             Guid id,
-            CatalogDbContext db,
+            IProductService service,
             CancellationToken ct) =>
         {
-            var product = await db.Products
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id, ct);
+            var product = await service.GetByIdAsync(id, ct);
 
             return product is null
                 ? Results.NotFound()
-                : Results.Ok(
-                    ProductResponse.FromEntity(product));
+                : Results.Ok(product);
         });
 
         return app;

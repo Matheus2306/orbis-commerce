@@ -1,3 +1,4 @@
+using System.Security.AccessControl;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Orbis.Catalog.Api.Contracts;
@@ -8,80 +9,67 @@ namespace Orbis.Catalog.Api.Application;
 
 public sealed class ProductService : IProductService
 {
-    private readonly CatalogDbContext _db;
+    private readonly IProductRepository _repository;
 
-    public ProductService(CatalogDbContext db)
+    public ProductService(IProductRepository repository)
     {
-        _db = db;
-    }    
+        _repository = repository;
+    }
 
-    public async Task<CreateProductResult> CreateAsync(
-        CreateProductRequest request,
-        CancellationToken cancellationToken = default)
+   public async Task<CreateProductResult> CreateAsync(
+    CreateProductRequest request,
+    CancellationToken cancellationToken = default)
     {
         Product product;
+
         try
         {
             product = new Product(
                 request.Name,
-                request.Sku, 
-                request.Price
-            );
+                request.Sku,
+                request.Price);
         }
-        catch(ArgumentException ex)
+        catch (ArgumentException ex)
         {
             return new CreateProductResult(
                 CreateProductStatus.Invalid,
-                Error: ex.Message
-            );
+                Error: ex.Message);
         }
 
-        var exist = await _db.Products
-            .AnyAsync(
-                p => p.Sku == product.Sku,
-                cancellationToken
-            );
+        var exists = await _repository.ExistsBySkuAsync(
+            product.Sku,
+            cancellationToken);
 
-        if (exist)
+        if (exists)
         {
             return new CreateProductResult(
                 CreateProductStatus.DuplicateSku,
-                Error: "SKU já cadastrado."
-            );
+                Error: "SKU já cadastrado.");
         }
-
-        _db.Products.Add(product);
 
         try
         {
-            await _db.SaveChangesAsync(cancellationToken);
+            await _repository.AddAsync(
+                product,
+                cancellationToken);
         }
-        catch(DbUpdateException ex) when (ex.InnerException is PostgresException
-            {
-                SqlState:PostgresErrorCodes.UniqueViolation
-            })
+        catch (DuplicateProductSkuException)
         {
             return new CreateProductResult(
                 CreateProductStatus.DuplicateSku,
-                Error: "SKU já cadastrado."
-            );
+                Error: "SKU já cadastrado.");
         }
+
         return new CreateProductResult(
             CreateProductStatus.Created,
-            ProductResponse.FromEntity(product)
-        );
+            ProductResponse.FromEntity(product));
     }
 
     public async Task<ProductResponse?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var product = await _db.Products
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                p => p.Id == id,
-                cancellationToken
-            );
+        var product = await _repository.GetByIdAsync(id);
 
         return product is null
             ? null
@@ -91,33 +79,28 @@ public sealed class ProductService : IProductService
     public async Task<IReadOnlyList<ProductResponse>> GetAllAsync(
         CancellationToken cancellationToken = default)
     {
-        return await _db.Products
-            .AsNoTracking()
-            .OrderBy(p => p.Name)
-            .Select(p => new ProductResponse(
-                p.Id,
-                p.Name,
-                p.Sku,
-                p.Price,
-                p.CreatedAt
-            ))
-            .ToListAsync(cancellationToken);
+        var products = await _repository.GetAllAsync();
+        var list = products.Select(p => new ProductResponse(
+            p.Id, 
+            p.Name, 
+            p.Sku, 
+            p.Price,
+            p.CreatedAt
+        )).ToList(); 
+        return list;
     }
 
     public Task<int> CountAsync(CancellationToken cancellationToken = default)
-        => _db.Products.CountAsync(cancellationToken);
+        =>_repository.CountAsync();
     
     public async Task<bool> ExistsBySkuAsync(string sku, CancellationToken cancellationToken = default)
     {
-        return await _db.Products.AnyAsync(p => p.Sku == sku, cancellationToken);
+        return await _repository.ExistsBySkuAsync(sku);
     }
     public Task<bool> ExistsByIdAsync(
     Guid id,
     CancellationToken cancellationToken = default)
-{
-    return _db.Products.AnyAsync(
-        p => p.Id == id,
-        cancellationToken
-    );
-}
+    {
+        return _repository.ExistsByIdAsync(id);
+    }
 }

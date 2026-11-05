@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Contracts;
@@ -13,7 +14,7 @@ public static class ProductEndpoints
 
         group.MapPost("/", async (
             CreateProductRequest request,
-            IProductService service,
+            [FromServices] IProductService service,
             CancellationToken ct) =>
         {
             var result = await service.CreateAsync(
@@ -44,16 +45,22 @@ public static class ProductEndpoints
         });
 
         group.MapGet("/", async (
-            IProductService service,
+            [FromServices] IProductService service,
             CancellationToken ct) =>
         {
             var products = await service.GetAllAsync(ct);
             return Results.Ok(products);
         });
 
+        group.MapGet("/count", async ( [FromServices] IProductService service ) =>
+        {
+            var count = await service.CountAsync();
+            return Results.Ok(count);
+        });
+
         group.MapGet("/{id:guid}", async (
             Guid id,
-            IProductService service,
+            [FromServices] IProductService service,
             CancellationToken ct) =>
         {
             var product = await service.GetByIdAsync(id, ct);

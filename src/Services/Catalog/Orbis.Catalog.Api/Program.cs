@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Data;
 using Orbis.Catalog.Api.Endpoints;
 using Scalar.AspNetCore;
@@ -10,6 +11,8 @@ var connectionString = builder.Configuration.GetConnectionString("CatalogDb") ??
 builder.Services.AddDbContext<CatalogDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.AddOpenApi();
+
+builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();
 

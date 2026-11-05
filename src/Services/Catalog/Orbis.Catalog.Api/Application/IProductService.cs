@@ -15,5 +15,5 @@ public interface IProductService
     Task<IReadOnlyList<ProductResponse>> GetAllAsync(
         CancellationToken cancellationToken = default);
     
-    Task<int> CountAsync();
+    Task<int> CountAsync(CancellationToken cancellationToken = default);
 }

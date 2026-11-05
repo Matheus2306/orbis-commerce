@@ -104,8 +104,6 @@ public sealed class ProductService : IProductService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<int> CountAsync()
-    {
-        return await _db.Products.CountAsync();
-    }
+    public Task<int> CountAsync(CancellationToken cancellationToken = default)
+        => _db.Products.CountAsync(cancellationToken);
 }

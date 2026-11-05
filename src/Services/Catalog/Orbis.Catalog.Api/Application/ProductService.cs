@@ -1,8 +1,4 @@
-using System.Security.AccessControl;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Orbis.Catalog.Api.Contracts;
-using Orbis.Catalog.Api.Data;
 using Orbis.Catalog.Api.Domain;
 
 namespace Orbis.Catalog.Api.Application;

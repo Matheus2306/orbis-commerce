@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Data;
 using Orbis.Catalog.Api.Endpoints;
+using Orbis.Catalog.Api.Infrastructure.Repositories;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,10 @@ builder.Services.AddDbContext<CatalogDbContext>(options => options.UseNpgsql(con
 
 builder.Services.AddOpenApi();
 
+// Registros de Repositórios
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+// Registros de serviços
 builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();

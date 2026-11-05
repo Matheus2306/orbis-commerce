@@ -16,4 +16,6 @@ public interface IProductService
         CancellationToken cancellationToken = default);
     
     Task<int> CountAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsAsync(string sku, CancellationToken cancellationToken = default);
 }

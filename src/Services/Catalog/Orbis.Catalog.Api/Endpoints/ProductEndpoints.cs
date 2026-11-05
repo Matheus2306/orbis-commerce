@@ -54,8 +54,8 @@ public static class ProductEndpoints
 
         group.MapGet("/count", async ( [FromServices] IProductService service ) =>
         {
-            var count = await service.CountAsync();
-            return Results.Ok(count);
+            var total = await service.CountAsync();
+            return Results.Ok(new { total });
         });
 
         group.MapGet("/{id:guid}", async (
@@ -68,6 +68,13 @@ public static class ProductEndpoints
             return product is null
                 ? Results.NotFound()
                 : Results.Ok(product);
+        });
+
+        group.MapGet("/exists", async (IProductService service, [FromQuery] string sku) =>
+        {
+            var exists = await service.ExistsAsync(sku);
+
+            return Results.Ok(new { exists });
         });
 
         return app;

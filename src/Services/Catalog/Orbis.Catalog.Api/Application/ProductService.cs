@@ -107,8 +107,17 @@ public sealed class ProductService : IProductService
     public Task<int> CountAsync(CancellationToken cancellationToken = default)
         => _db.Products.CountAsync(cancellationToken);
     
-    public async Task<bool> ExistsAsync(string sku, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsBySkuAsync(string sku, CancellationToken cancellationToken = default)
     {
         return await _db.Products.AnyAsync(p => p.Sku == sku, cancellationToken);
     }
+    public Task<bool> ExistsByIdAsync(
+    Guid id,
+    CancellationToken cancellationToken = default)
+{
+    return _db.Products.AnyAsync(
+        p => p.Id == id,
+        cancellationToken
+    );
+}
 }

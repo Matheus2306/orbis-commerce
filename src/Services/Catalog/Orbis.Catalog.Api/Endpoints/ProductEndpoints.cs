@@ -70,11 +70,16 @@ public static class ProductEndpoints
                 : Results.Ok(product);
         });
 
-        group.MapGet("/exists", async (IProductService service, [FromQuery] string sku) =>
+        group.MapGet("sku/{sku}/exists", async (IProductService service, [FromQuery] string sku) =>
         {
-            var exists = await service.ExistsAsync(sku);
+            var exists = await service.ExistsBySkuAsync(sku);
 
             return Results.Ok(new { exists });
+        });
+
+        group.MapGet("id/{id}/exists", async (IProductService service, [FromQuery] Guid id) =>
+        {
+           var exists = await service.ExistsByIdAsync(id);  
         });
 
         return app;

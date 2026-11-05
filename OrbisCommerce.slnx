@@ -4,4 +4,7 @@
   <Folder Name="/src/Services/Catalog/">
     <Project Path="src/Services/Catalog/Orbis.Catalog.Api/Orbis.Catalog.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj" />
+  </Folder>
 </Solution>

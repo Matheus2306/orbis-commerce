@@ -26,4 +26,14 @@ public sealed class StockItem
         ProductId = productId;
         Quantity = quantity;
     }
+
+    public void AddStock(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantidade inválida");
+
+        Quantity += quantity;
+
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

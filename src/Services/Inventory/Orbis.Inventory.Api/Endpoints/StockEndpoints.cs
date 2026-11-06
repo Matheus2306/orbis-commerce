@@ -67,6 +67,31 @@ public static class StockEndpoints
                 stock);
         });
 
+        group.MapPost("/{id:guid}/add", async (
+            Guid id,
+            InventoryDbContext db,
+            int quantity,
+            CancellationToken ct
+        ) =>
+        {
+            var stock = await db.StockItems.FirstOrDefaultAsync(x => x.Id == id, ct);
+
+            if (stock == null)
+                return Results.NotFound();
+
+            try
+            {
+                stock.AddStock(quantity);
+                db.SaveChanges();
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(ex.Message);
+            }
+
+            return Results.Ok("Quantidade adicionada ao estoque");
+        });
+
         group.MapGet("/{productId:guid}", async (
             Guid productId,
             InventoryDbContext db,

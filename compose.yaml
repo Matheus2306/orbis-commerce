@@ -80,7 +80,8 @@ services:
       ASPNETCORE_HTTP_PORTS: 8080
 
       ConnectionStrings__CatalogDb: "Host=postgres;Port=5432;Database=orbis_catalog;Username=orbis;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}"
-
+      ConnectionStrings__Redis: "redis:6379"
+      
     ports:
       - "127.0.0.1:5080:8080"
 

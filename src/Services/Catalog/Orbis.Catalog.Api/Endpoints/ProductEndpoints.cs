@@ -60,10 +60,10 @@ public static class ProductEndpoints
 
         group.MapGet("/{id:guid}", async (
             Guid id,
-            [FromServices] IProductService service,
+            CachedProductReader reader,
             CancellationToken ct) =>
         {
-            var product = await service.GetByIdAsync(id, ct);
+            var product = await reader.GetByIdAsync(id, ct);
 
             return product is null
                 ? Results.NotFound()
@@ -79,7 +79,7 @@ public static class ProductEndpoints
 
         group.MapGet("id/{id}/exists", async (IProductService service, [FromQuery] Guid id) =>
         {
-           var exists = await service.ExistsByIdAsync(id);  
+           var exists = await service.ExistsByIdAsync(id);
         });
 
         return app;

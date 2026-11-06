@@ -19,6 +19,20 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 // Registros de serviços
 builder.Services.AddScoped<IProductService, ProductService>();
 
+// Serviço de cache Distribuidos
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration
+        .GetConnectionString("Redis")
+        ?? throw new InvalidOperationException(
+            "Redis não configurado.");
+
+    options.InstanceName = "orbis:catalog:";
+});
+
+// Registro de serviço de cache
+builder.Services.AddScoped<CachedProductReader>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

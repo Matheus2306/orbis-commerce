@@ -30,10 +30,22 @@ public sealed class StockItem
     public void AddStock(int quantity)
     {
         if (quantity <= 0)
-            throw new ArgumentException("Quantidade inválida");
+        throw new ArgumentException(
+            "A quantidade deve ser maior que zero.");
 
-        Quantity += quantity;
+    int newQuantity;
 
-        UpdatedAt = DateTime.UtcNow;
+    try
+    {
+        newQuantity = checked(Quantity + quantity);
+    }
+    catch (OverflowException)
+    {
+        throw new ArgumentException(
+            "A quantidade excede o limite permitido.");
+    }
+
+    Quantity = newQuantity;
+    UpdatedAt = DateTime.UtcNow;
     }
 }

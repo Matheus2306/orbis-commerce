@@ -67,29 +67,40 @@ public static class StockEndpoints
                 stock);
         });
 
-        group.MapPost("/{id:guid}/add", async (
-            Guid id,
+        group.MapPost("/{productId:guid}/add", async (
+            Guid productId,
             InventoryDbContext db,
-            int quantity,
+            AddStockRequest request,
             CancellationToken ct
         ) =>
         {
-            var stock = await db.StockItems.FirstOrDefaultAsync(x => x.Id == id, ct);
+            var stock = await db.StockItems
+        .FirstOrDefaultAsync(
+            x => x.ProductId == productId,
+            ct);
 
-            if (stock == null)
-                return Results.NotFound();
+            if (stock is null)
+                return Results.NotFound(
+                    new { error = "Estoque não encontrado." });
 
             try
             {
-                stock.AddStock(quantity);
-                db.SaveChanges();
+                stock.AddStock(request.Quantity);
             }
             catch (ArgumentException ex)
             {
-                return Results.BadRequest(ex.Message);
+                return Results.BadRequest(
+                    new { error = ex.Message });
             }
 
-            return Results.Ok("Quantidade adicionada ao estoque");
+            await db.SaveChangesAsync(ct);
+
+            return Results.Ok(new
+            {
+                stock.ProductId,
+                stock.Quantity,
+                stock.UpdatedAt
+            });
         });
 
         group.MapGet("/{productId:guid}", async (

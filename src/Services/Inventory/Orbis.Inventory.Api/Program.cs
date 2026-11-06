@@ -1,15 +1,32 @@
+using Microsoft.EntityFrameworkCore;
+using Orbis.Inventory.Api.Data;
+using Orbis.Inventory.Api.Endpoints;
+using Scalar.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+var connectionString = builder.Configuration
+    .GetConnectionString("InventoryDb")
+    ?? throw new InvalidOperationException(
+        "Connection string InventoryDb não configurada.");
+
+builder.Services.AddDbContext<InventoryDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
+
 }
+
+app.MapGet("/health/live", () =>
+    Results.Ok(new { status = "alive" }));
+
+app.MapStockEndpoints();
 
 app.Run();

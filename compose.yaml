@@ -88,6 +88,30 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+  
+  inventory-api:
+    build:
+      context: ./src/Services/Inventory/Orbis.Inventory.Api
+      dockerfile: Dockerfile
+
+    image: orbis-inventory-api:1.0
+    container_name: orbis-inventory-api
+
+    restart: unless-stopped
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+
+      ConnectionStrings__InventoryDb: "Host=postgres;Port=5432;Database=orbis_inventory;Username=orbis;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}"
+
+    ports:
+      - "127.0.0.1:5081:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:

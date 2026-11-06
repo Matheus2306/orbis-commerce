@@ -1,25 +1,26 @@
-# ETAPA 1: Compilacao
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /src
 
-# Copia primeiro o projeto para aproveitar o cache
-COPY Orbis.Catalog.Api.csproj ./
+COPY BuildingBlocks/Orbis.Contracts/Orbis.Contracts.csproj \
+    BuildingBlocks/Orbis.Contracts/
 
-# Restaura as dependencias NuGet
-RUN dotnet restore Orbis.Catalog.Api.csproj
+COPY Services/Catalog/Orbis.Catalog.Api/Orbis.Catalog.Api.csproj \
+    Services/Catalog/Orbis.Catalog.Api/
 
-# Copia os demais arquivos
-COPY . ./
+RUN dotnet restore \
+    Services/Catalog/Orbis.Catalog.Api/Orbis.Catalog.Api.csproj
 
-# Publica a aplicacao
-RUN dotnet publish Orbis.Catalog.Api.csproj \
+COPY . .
+
+RUN dotnet publish \
+    Services/Catalog/Orbis.Catalog.Api/Orbis.Catalog.Api.csproj \
     -c Release \
     -o /app/publish \
     --no-restore
 
-# ETAPA 2: Execucao
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 WORKDIR /app
 
@@ -27,8 +28,6 @@ ENV ASPNETCORE_HTTP_PORTS=8080
 
 EXPOSE 8080
 
-# Copia somente os arquivos publicados
-COPY --from=build /app/publish ./
+COPY --from=build /app/publish .
 
-# Inicia a API
 ENTRYPOINT ["dotnet", "Orbis.Catalog.Api.dll"]

@@ -67,8 +67,8 @@ services:
 
   catalog-api:
     build:
-      context: ./src/Services/Catalog/Orbis.Catalog.Api
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: Services/Catalog/Orbis.Catalog.Api/Dockerfile
 
     image: orbis-catalog-api:1.0
     container_name: orbis-catalog-api
@@ -81,6 +81,11 @@ services:
 
       ConnectionStrings__CatalogDb: "Host=postgres;Port=5432;Database=orbis_catalog;Username=orbis;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}"
       ConnectionStrings__Redis: "redis:6379"
+
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: orbis
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:?Defina RABBITMQ_PASSWORD}
+
       
     ports:
       - "127.0.0.1:5080:8080"
@@ -91,8 +96,8 @@ services:
   
   inventory-api:
     build:
-      context: ./src/Services/Inventory/Orbis.Inventory.Api
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: Services/Inventory/Orbis.Inventory.Api/Dockerfile
 
     image: orbis-inventory-api:1.0
     container_name: orbis-inventory-api
@@ -104,12 +109,17 @@ services:
       ASPNETCORE_HTTP_PORTS: 8080
 
       ConnectionStrings__InventoryDb: "Host=postgres;Port=5432;Database=orbis_inventory;Username=orbis;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: orbis
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:?Defina RABBITMQ_PASSWORD}
 
     ports:
       - "127.0.0.1:5081:8080"
 
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
 volumes:

@@ -1,4 +1,6 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Orbis.Inventory.Api.Consumers;
 using Orbis.Inventory.Api.Data;
 using Orbis.Inventory.Api.Endpoints;
 using Scalar.AspNetCore;
@@ -12,6 +14,33 @@ var connectionString = builder.Configuration
 
 builder.Services.AddDbContext<InventoryDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<ProductCreatedConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(
+            builder.Configuration["RabbitMq:Host"]
+                ?? "rabbitmq",
+            "/",
+            h =>
+            {
+                h.Username(
+                    builder.Configuration["RabbitMq:Username"]
+                        ?? throw new InvalidOperationException(
+                            "RabbitMQ Username não configurado."));
+
+                h.Password(
+                    builder.Configuration["RabbitMq:Password"]
+                        ?? throw new InvalidOperationException(
+                            "RabbitMQ Password não configurado."));
+            });
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 builder.Services.AddOpenApi();
 

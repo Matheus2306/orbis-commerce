@@ -1,7 +1,9 @@
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Contracts;
+using Orbis.Contracts.Events;
 
 namespace Orbis.Catalog.Api.Endpoints;
 
@@ -12,37 +14,49 @@ public static class ProductEndpoints
         var group = app.MapGroup("/api/products")
             .WithTags("Products");
 
+
         group.MapPost("/", async (
             CreateProductRequest request,
-            [FromServices] IProductService service,
+            IProductService service,
+            IPublishEndpoint publisher,
             CancellationToken ct) =>
         {
-            var result = await service.CreateAsync(
-                request,
-                ct
+            var result = await service.CreateAsync(request, ct);
+
+            if (result.Status == CreateProductStatus.Invalid)
+            {
+                return Results.BadRequest(
+                    new { error = result.Error });
+            }
+
+            if (result.Status == CreateProductStatus.DuplicateSku)
+            {
+                return Results.Conflict(
+                    new { error = result.Error });
+            }
+
+            if (result.Status != CreateProductStatus.Created
+                || result.Product is null)
+            {
+                return Results.StatusCode(500);
+            }
+
+            var product = result.Product;
+
+            var productCreated = new ProductCreated(
+                EventId: Guid.NewGuid(),
+                ProductId: product.Id,
+                Sku: product.Sku,
+                OccurredAt: DateTime.UtcNow
             );
 
-            return result.Status switch
-            {
-                CreateProductStatus.Created =>
-                    Results.Created(
-                        $"/api/products/{result.Product!.Id}",
-                        result.Product
-                    ),
+            await publisher.Publish(productCreated, ct);
 
-                CreateProductStatus.DuplicateSku =>
-                    Results.Conflict(
-                        new { error = result.Error }
-                    ),
-
-                CreateProductStatus.Invalid =>
-                    Results.BadRequest(
-                        new { error = result.Error }
-                    ),
-
-                _ => Results.StatusCode(500)
-            };
+            return Results.Created(
+                $"/api/products/{product.Id}",
+                product);
         });
+
 
         group.MapGet("/", async (
             [FromServices] IProductService service,
@@ -52,7 +66,7 @@ public static class ProductEndpoints
             return Results.Ok(products);
         });
 
-        group.MapGet("/count", async ( [FromServices] IProductService service ) =>
+        group.MapGet("/count", async ([FromServices] IProductService service) =>
         {
             var total = await service.CountAsync();
             return Results.Ok(new { total });
@@ -79,7 +93,7 @@ public static class ProductEndpoints
 
         group.MapGet("id/{id}/exists", async (IProductService service, [FromQuery] Guid id) =>
         {
-           var exists = await service.ExistsByIdAsync(id);
+            var exists = await service.ExistsByIdAsync(id);
         });
 
         return app;

@@ -3,18 +3,24 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
 WORKDIR /src
 
-COPY Orbis.Inventory.Api.csproj ./
+COPY BuildingBlocks/Orbis.Contracts/Orbis.Contracts.csproj \
+    BuildingBlocks/Orbis.Contracts/
 
-RUN dotnet restore Orbis.Inventory.Api.csproj
+COPY Services/Inventory/Orbis.Inventory.Api/Orbis.Inventory.Api.csproj \
+    Services/Inventory/Orbis.Inventory.Api/
 
-COPY . ./
+RUN dotnet restore \
+    Services/Inventory/Orbis.Inventory.Api/Orbis.Inventory.Api.csproj
 
-RUN dotnet publish Orbis.Inventory.Api.csproj \
+COPY . .
+
+RUN dotnet publish \
+    Services/Inventory/Orbis.Inventory.Api/Orbis.Inventory.Api.csproj \
     -c Release \
     -o /app/publish \
     --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 WORKDIR /app
 
@@ -22,6 +28,6 @@ ENV ASPNETCORE_HTTP_PORTS=8080
 
 EXPOSE 8080
 
-COPY --from=build /app/publish ./
+COPY --from=build /app/publish .
 
 ENTRYPOINT ["dotnet", "Orbis.Inventory.Api.dll"]

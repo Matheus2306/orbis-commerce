@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Data;
@@ -33,6 +34,29 @@ builder.Services.AddStackExchangeRedisCache(options =>
 // Registro de serviço de cache
 builder.Services.AddScoped<CachedProductReader>();
 
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(
+            builder.Configuration["RabbitMq:Host"]
+                ?? "rabbitmq",
+            "/",
+            h =>
+            {
+                h.Username(
+                    builder.Configuration["RabbitMq:Username"]
+                        ?? throw new InvalidOperationException(
+                            "RabbitMQ Username não configurado."));
+
+                h.Password(
+                    builder.Configuration["RabbitMq:Password"]
+                        ?? throw new InvalidOperationException(
+                            "RabbitMQ Password não configurado."));
+            });
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -42,7 +66,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.MapGet("/health/live", ()=> Results.Ok(new { status = "alive" }));
+app.MapGet("/health/live", () => Results.Ok(new { status = "alive" }));
 
 app.MapProductEndpoints();
 

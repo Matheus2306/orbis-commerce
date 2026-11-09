@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Orbis.Catalog.Api.Domain;
 
@@ -38,5 +39,10 @@ public sealed class CatalogDbContext : DbContext
             entity.Property(p => p.CreatedAt)
                 .IsRequired();
         });
+
+        // Entidades do Transactions Outbox
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }

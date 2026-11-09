@@ -57,6 +57,36 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+// MassTransit config
+builder.Services.AddMassTransit(x =>
+{
+    x.AddEntityFrameworkOutbox<CatalogDbContext>(options =>
+    {
+        options.UsePostgres();
+        options.UseBusOutbox();
+    });
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(
+            builder.Configuration["RabbitMq:Host"]
+                ?? "rabbitmq",
+            "/",
+            h =>
+            {
+                h.Username(
+                    builder.Configuration["RabbitMq:Username"]
+                        ?? throw new InvalidOperationException(
+                            "RabbitMQ Username não configurado."));
+
+                h.Password(
+                    builder.Configuration["RabbitMq:Password"]
+                        ?? throw new InvalidOperationException(
+                            "RabbitMQ Password não configurado."));
+            });
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

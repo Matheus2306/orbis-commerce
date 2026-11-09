@@ -26,7 +26,8 @@ public static class StockEndpoints
             {
                 stock = new StockItem(
                     request.ProductId,
-                    request.Quantity);
+                    request.Quantity,
+                    request.ReservedQuantity);
             }
             catch (ArgumentException ex)
             {

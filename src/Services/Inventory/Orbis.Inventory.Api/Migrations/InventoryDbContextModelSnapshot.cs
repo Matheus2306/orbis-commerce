@@ -202,6 +202,11 @@ namespace Orbis.Inventory.Api.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ReservedQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -210,7 +215,10 @@ namespace Orbis.Inventory.Api.Migrations
                     b.HasIndex("ProductId")
                         .IsUnique();
 
-                    b.ToTable("stock_items", (string)null);
+                    b.ToTable("stock_items", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_stock_items_quantities", "\"Quantity\" >= 0 AND \"ReservedQuantity\" >= 0 AND \"ReservedQuantity\" <= \"Quantity\"");
+                        });
                 });
 
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>

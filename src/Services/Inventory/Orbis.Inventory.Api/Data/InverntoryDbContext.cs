@@ -33,8 +33,18 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.Quantity)
                 .IsRequired();
 
+            entity.Property(x => x.ReservedQuantity).HasDefaultValue(0).IsRequired();
+
+            entity.Ignore(x => x.AvaliableQuantity);
+
             entity.Property(x => x.UpdatedAt)
                 .IsRequired();
+
+            entity.ToTable(t => t.HasCheckConstraint(
+                "CK_stock_items_quantities",
+                "\"Quantity\" >= 0 AND " +
+                "\"ReservedQuantity\" >= 0 AND " +
+                "\"ReservedQuantity\" <= \"Quantity\""));
         });
 
         modelBuilder.AddInboxStateEntity();

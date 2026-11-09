@@ -47,7 +47,8 @@ public sealed class ProductCreatedConsumer
 
         var stock = new StockItem(
             productId: message.ProductId,
-            quantity: 0
+            quantity: 0,
+            reservedQuantity: 0
         );
 
         _db.StockItems.Add(stock);

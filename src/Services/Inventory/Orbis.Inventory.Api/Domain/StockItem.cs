@@ -8,12 +8,16 @@ public sealed class StockItem
 
     public int Quantity { get; private set; }
 
+    public int ReservedQuantity { get; private set; }
+
+    public int AvaliableQuantity => Quantity - ReservedQuantity;
+
     public DateTime UpdatedAt { get; private set; }
         = DateTime.UtcNow;
 
     private StockItem() { }
 
-    public StockItem(Guid productId, int quantity)
+    public StockItem(Guid productId, int quantity, int reservedQuantity)
     {
         if (productId == Guid.Empty)
             throw new ArgumentException(
@@ -25,27 +29,41 @@ public sealed class StockItem
 
         ProductId = productId;
         Quantity = quantity;
+        ReservedQuantity = reservedQuantity;
     }
 
     public void AddStock(int quantity)
     {
         if (quantity <= 0)
-        throw new ArgumentException(
-            "A quantidade deve ser maior que zero.");
+            throw new ArgumentException(
+                "A quantidade deve ser maior que zero.");
 
-    int newQuantity;
+        int newQuantity;
 
-    try
-    {
-        newQuantity = checked(Quantity + quantity);
+        try
+        {
+            newQuantity = checked(Quantity + quantity);
+        }
+        catch (OverflowException)
+        {
+            throw new ArgumentException(
+                "A quantidade excede o limite permitido.");
+        }
+
+        Quantity = newQuantity;
+        UpdatedAt = DateTime.UtcNow;
     }
-    catch (OverflowException)
+    
+    public void Reserved(int quantity)
     {
-        throw new ArgumentException(
-            "A quantidade excede o limite permitido.");
-    }
+        if (quantity <= 0)
+            throw new ArgumentException("A quantidade deve ser maior que zero.");
 
-    Quantity = newQuantity;
-    UpdatedAt = DateTime.UtcNow;
+        if (AvaliableQuantity < quantity)
+            throw new InvalidOperationException("Estoque Insuficiente.");
+
+        ReservedQuantity = checked(ReservedQuantity + quantity);
+
+        UpdatedAt = DateTime.UtcNow;
     }
 }

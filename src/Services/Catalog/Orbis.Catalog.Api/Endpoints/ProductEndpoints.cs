@@ -13,48 +13,31 @@ public static class ProductEndpoints
     {
         var group = app.MapGroup("/api/products")
             .WithTags("Products");
-
-
+        
         group.MapPost("/", async (
             CreateProductRequest request,
             IProductService service,
-            IPublishEndpoint publisher,
             CancellationToken ct) =>
         {
             var result = await service.CreateAsync(request, ct);
 
-            if (result.Status == CreateProductStatus.Invalid)
+            return result.Status switch
             {
-                return Results.BadRequest(
-                    new { error = result.Error });
-            }
+                CreateProductStatus.Created =>
+                    Results.Created(
+                        $"/api/products/{result.Product!.Id}",
+                        result.Product),
 
-            if (result.Status == CreateProductStatus.DuplicateSku)
-            {
-                return Results.Conflict(
-                    new { error = result.Error });
-            }
+                CreateProductStatus.Invalid =>
+                    Results.BadRequest(
+                        new { error = result.Error }),
 
-            if (result.Status != CreateProductStatus.Created
-                || result.Product is null)
-            {
-                return Results.StatusCode(500);
-            }
+                CreateProductStatus.DuplicateSku =>
+                    Results.Conflict(
+                        new { error = result.Error }),
 
-            var product = result.Product;
-
-            var productCreated = new ProductCreated(
-                EventId: Guid.NewGuid(),
-                ProductId: product.Id,
-                Sku: product.Sku,
-                OccurredAt: DateTime.UtcNow
-            );
-
-            await publisher.Publish(productCreated, ct);
-
-            return Results.Created(
-                $"/api/products/{product.Id}",
-                product);
+                _ => Results.StatusCode(500)
+            };
         });
 
 

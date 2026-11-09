@@ -1,65 +1,90 @@
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Orbis.Catalog.Api.Contracts;
 using Orbis.Catalog.Api.Domain;
+using Orbis.Contracts.Events;
 
 namespace Orbis.Catalog.Api.Application;
 
 public sealed class ProductService : IProductService
 {
     private readonly IProductRepository _repository;
+    private readonly IPublishEndpoint _publisher;
 
-    public ProductService(IProductRepository repository)
+    public ProductService(IProductRepository repository, IPublishEndpoint publisher)
     {
         _repository = repository;
+        _publisher = publisher;
     }
 
-   public async Task<CreateProductResult> CreateAsync(
+   
+public async Task<CreateProductResult> CreateAsync(
     CreateProductRequest request,
     CancellationToken cancellationToken = default)
+{
+    Product product;
+
+    try
     {
-        Product product;
-
-        try
-        {
-            product = new Product(
-                request.Name,
-                request.Sku,
-                request.Price);
-        }
-        catch (ArgumentException ex)
-        {
-            return new CreateProductResult(
-                CreateProductStatus.Invalid,
-                Error: ex.Message);
-        }
-
-        var exists = await _repository.ExistsBySkuAsync(
-            product.Sku,
-            cancellationToken);
-
-        if (exists)
-        {
-            return new CreateProductResult(
-                CreateProductStatus.DuplicateSku,
-                Error: "SKU já cadastrado.");
-        }
-
-        try
-        {
-            await _repository.AddAsync(
-                product,
-                cancellationToken);
-        }
-        catch (DuplicateProductSkuException)
-        {
-            return new CreateProductResult(
-                CreateProductStatus.DuplicateSku,
-                Error: "SKU já cadastrado.");
-        }
-
-        return new CreateProductResult(
-            CreateProductStatus.Created,
-            ProductResponse.FromEntity(product));
+        product = new Product(
+            request.Name,
+            request.Sku,
+            request.Price);
     }
+    catch (ArgumentException ex)
+    {
+        return new CreateProductResult(
+            CreateProductStatus.Invalid,
+            Error: ex.Message);
+    }
+
+    if (await _repository.ExistsBySkuAsync(
+        product.Sku, cancellationToken))
+    {
+        return new CreateProductResult(
+            CreateProductStatus.DuplicateSku,
+            Error: "SKU já cadastrado.");
+    }
+
+    var productCreated = new ProductCreated(
+        EventId: Guid.NewGuid(),
+        ProductId: product.Id,
+        Sku: product.Sku,
+        OccurredAt: DateTime.UtcNow
+    );
+
+    // Prepara a entidade para persistencia.
+    await _repository.AddAsync(
+        product,
+        cancellationToken);
+
+    // Registra o evento no Bus Outbox.
+    await _publisher.Publish(
+        productCreated,
+        cancellationToken);
+
+    try
+    {
+        // Confirma produto e mensagem juntos.
+        await _repository.SaveChangesAsync(
+            cancellationToken);
+    }
+    catch (DbUpdateException ex) when (
+        ex.InnerException is PostgresException pg
+        && pg.SqlState == PostgresErrorCodes.UniqueViolation
+        && pg.ConstraintName == "IX_products_Sku")
+    {
+        return new CreateProductResult(
+            CreateProductStatus.DuplicateSku,
+            Error: "SKU já cadastrado.");
+    }
+
+    return new CreateProductResult(
+        CreateProductStatus.Created,
+        ProductResponse.FromEntity(product));
+}
+
 
     public async Task<ProductResponse?> GetByIdAsync(
         Guid id,

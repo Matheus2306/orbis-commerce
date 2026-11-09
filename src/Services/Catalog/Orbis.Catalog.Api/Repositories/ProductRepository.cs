@@ -16,25 +16,13 @@ public sealed class ProductRepository : IProductRepository
         _db = db;
     }
 
-    public async Task AddAsync(
+    public Task AddAsync(
         Product product,
         CancellationToken cancellationToken = default)
     {
         _db.Products.Add(product);
 
-        try
-        {
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-            when (ex.InnerException is PostgresException pg
-                  && pg.SqlState == PostgresErrorCodes.UniqueViolation)
-        {
-            _db.Entry(product).State = EntityState.Detached;
-
-            throw new DuplicateProductSkuException(
-                product.Sku, ex);
-        }
+        return Task.CompletedTask;
     }
 
     public Task<Product?> GetByIdAsync(
@@ -73,6 +61,12 @@ public sealed class ProductRepository : IProductRepository
         return _db.Products.AnyAsync(
             p => p.Id == id,
             cancellationToken);
+    }
+
+    public Task<int> SaveChangesAsync(
+    CancellationToken cancellationToken = default)
+    {
+        return _db.SaveChangesAsync(cancellationToken);
     }
 
     public Task<int> CountAsync(

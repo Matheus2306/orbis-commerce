@@ -1,4 +1,5 @@
 
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Orbis.Inventory.Api.Domain;
 
@@ -35,5 +36,9 @@ public sealed class InventoryDbContext : DbContext
             entity.Property(x => x.UpdatedAt)
                 .IsRequired();
         });
+
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }

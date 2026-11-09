@@ -15,9 +15,32 @@ var connectionString = builder.Configuration
 builder.Services.AddDbContext<InventoryDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// MassTransit config
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<ProductCreatedConsumer>();
+
+    x.AddEntityFrameworkOutbox<InventoryDbContext>(options =>
+    {
+        options.UsePostgres();
+    });
+
+    x.AddConfigureEndpointsCallback((context, name, cfg) =>
+    {
+        // Tentativas para falhas transitorias curtas
+        cfg.UseMessageRetry(retry =>
+        {
+            retry.Intervals(
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(3)
+            );
+        });
+
+        // Controle transacional do consumo
+        cfg.UseEntityFrameworkOutbox<InventoryDbContext>(
+            context);
+    });
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -29,18 +52,19 @@ builder.Services.AddMassTransit(x =>
             {
                 h.Username(
                     builder.Configuration["RabbitMq:Username"]
-                        ?? throw new InvalidOperationException(
-                            "RabbitMQ Username não configurado."));
+                    ?? throw new InvalidOperationException(
+                        "RabbitMQ Username nao configurado."));
 
                 h.Password(
                     builder.Configuration["RabbitMq:Password"]
-                        ?? throw new InvalidOperationException(
-                            "RabbitMQ Password não configurado."));
+                    ?? throw new InvalidOperationException(
+                        "RabbitMQ Password nao configurada."));
             });
 
         cfg.ConfigureEndpoints(context);
     });
 });
+
 
 builder.Services.AddOpenApi();
 

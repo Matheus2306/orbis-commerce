@@ -144,42 +144,102 @@ public static class StockEndpoints
             return Results.Ok(stocks);
         });
 
-        group.MapPost("/{productId}/reserve", async (
+        group.MapPost("/{productId:guid}/reserve", async (
             Guid productId,
-            ReservedStockRequest request,
+            ReserveStockRequest request,
             IStockReservationService service,
             CancellationToken ct) =>
         {
             var result = await service.ReserveAsync(
+                request.OrderId,
                 productId,
                 request.Quantity,
                 ct);
 
-            return result switch
+            var response = new
             {
-                ReservationStatus.Reserved => Results.Ok(new
-                {
-                    message = "Estoque reservado.",
-                    productId,
-                    quantity = request.Quantity
-                }),
-                ReservationStatus.insufficientStock => Results.Conflict(new
-                {
-                    error = "Estoque insuficiente."
-                }),
-                ReservationStatus.NotFound => Results.NotFound(new
-                {
-                    error = "Estoque não encontrado."
-                }),
-                ReservationStatus.invalidQuantity => Results.BadRequest(new
-                {
-                    error = "Quantidade inválida."
-                }),
+                reservationId = result.ReservationId,
+                orderId = request.OrderId,
+                productId
+            };
+
+            return result.Status switch
+            {
+                ReservationStatus.Reserved =>
+                    Results.Ok(new
+                    {
+                        message = "Reserva criada.",
+                        response.reservationId,
+                        response.orderId,
+                        response.productId
+                    }),
+
+                ReservationStatus.AlreadyReserved =>
+                    Results.Ok(new
+                    {
+                        message = "Reserva já existente.",
+                        response.reservationId,
+                        response.orderId,
+                        response.productId
+                    }),
+
+                ReservationStatus.InsufficientStock =>
+                    Results.Conflict(
+                        new { error = "Estoque insuficiente." }),
+
+                ReservationStatus.NotFound =>
+                    Results.NotFound(
+                        new { error = "Estoque não encontrado." }),
+
+                ReservationStatus.InvalidQuantity =>
+                    Results.BadRequest(
+                        new { error = "Dados inválidos." }),
+
+                ReservationStatus.Conflict =>
+                    Results.Conflict(
+                        new { error = "Reserva existente com dados ou estado incompatíveis." }),
 
                 _ => Results.StatusCode(500)
             };
         });
 
+
+        group.MapPost("/{productId:guid}/release", async (
+            Guid productId,
+            ReleaseStockRequest request,
+            IStockReservationService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.ReleaseAsync(
+                request.OrderId,
+                productId,
+                ct);
+
+            return result switch
+            {
+                ReleaseStatus.Released =>
+                    Results.Ok(new
+                    {
+                        message = "Reserva liberada."
+                    }),
+
+                ReleaseStatus.AlreadyReleased =>
+                    Results.Ok(new
+                    {
+                        message = "Reserva já estava liberada."
+                    }),
+
+                ReleaseStatus.NotFound =>
+                    Results.NotFound(
+                        new { error = "Reserva não encontrada." }),
+
+                ReleaseStatus.InvalidRequest =>
+                    Results.BadRequest(
+                        new { error = "Identificadores inválidos." }),
+
+                _ => Results.StatusCode(500)
+            };
+        });
 
         return app;
     }

@@ -7,3 +7,8 @@ public sealed record CreateStockRequest(
 );
 
 public sealed record AddStockRequest(int Quantity);
+
+public sealed record ReserveStockRequest(
+    Guid OrderId,
+    int Quantity
+);

@@ -8,6 +8,7 @@ using Orbis.Catalog.Api.Application;
 
 namespace Orbis.Catalog.IntegrationTests.Infrastructure;
 
+[Trait("Category", "Docker")]
 public sealed class ProductRepositoryTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
@@ -58,6 +59,7 @@ public sealed class ProductRepositoryTests : IAsyncLifetime
         {
             var repository = new ProductRepository(writeDb);
             await repository.AddAsync(product);
+            await repository.SaveChangesAsync();
         }
 
         // Assert: consulta com outro DbContext
@@ -92,10 +94,12 @@ public sealed class ProductRepositoryTests : IAsyncLifetime
         );
 
         await repository.AddAsync(firstProduct);
+        await repository.SaveChangesAsync();
+        await repository.AddAsync(secondProduct);
 
         // Act + Assert
-        await Assert.ThrowsAsync<DuplicateProductSkuException>(
-            () => repository.AddAsync(secondProduct)
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => repository.SaveChangesAsync()
         );
 
         var total = await repository.CountAsync();

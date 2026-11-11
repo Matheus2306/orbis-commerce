@@ -13,5 +13,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Orbis.Catalog.IntegrationTests/Orbis.Catalog.IntegrationTests.csproj" />
     <Project Path="tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj" />
+    <Project Path="tests/Orbis.Inventory.IntegrationTests/Orbis.Inventory.IntegrationTests.csproj" />
   </Folder>
 </Solution>

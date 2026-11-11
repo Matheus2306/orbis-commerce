@@ -70,41 +70,52 @@ public static class StockEndpoints
                 stock);
         });
 
+
         group.MapPost("/{productId:guid}/add", async (
             Guid productId,
-            InventoryDbContext db,
             AddStockRequest request,
-            CancellationToken ct
-        ) =>
+            InventoryDbContext db,
+            CancellationToken ct) =>
         {
-            var stock = await db.StockItems
-        .FirstOrDefaultAsync(
-            x => x.ProductId == productId,
-            ct);
-
-            if (stock is null)
-                return Results.NotFound(
-                    new { error = "Estoque não encontrado." });
-
-            try
-            {
-                stock.AddStock(request.Quantity);
-            }
-            catch (ArgumentException ex)
-            {
+            if (request.Quantity <= 0)
                 return Results.BadRequest(
-                    new { error = ex.Message });
-            }
+                    new { error = "Quantidade inválida." });
 
-            await db.SaveChangesAsync(ct);
+            var affectedRows = await db.StockItems
+                .Where(stock =>
+                    stock.ProductId == productId &&
+                    stock.Quantity <= int.MaxValue - request.Quantity)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(
+                        stock => stock.Quantity,
+                        stock => stock.Quantity + request.Quantity)
+                    .SetProperty(
+                        stock => stock.UpdatedAt,
+                        DateTime.UtcNow),
+                    ct);
+
+            if (affectedRows == 0)
+            {
+                var exists = await db.StockItems
+                    .AsNoTracking()
+                    .AnyAsync(
+                        x => x.ProductId == productId,
+                        ct);
+
+                return exists
+                    ? Results.Conflict(
+                        new { error = "Limite de estoque excedido." })
+                    : Results.NotFound(
+                        new { error = "Estoque não encontrado." });
+            }
 
             return Results.Ok(new
             {
-                stock.ProductId,
-                stock.Quantity,
-                stock.UpdatedAt
+                message = "Entrada de estoque registrada.",
+                quantityAdded = request.Quantity
             });
         });
+
 
         group.MapGet("/{productId:guid}", async (
             Guid productId,

@@ -1,3 +1,5 @@
+using MassTransit;
+using Moq;
 
 using Orbis.Catalog.Api.Application;
 using Orbis.Catalog.Api.Contracts;
@@ -15,7 +17,7 @@ public sealed class ProductServiceTests
         // Arrange
         var repository = new FakeProductRepository();
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var request = new CreateProductRequest(
             "Notebook Gamer",
@@ -53,7 +55,7 @@ public sealed class ProductServiceTests
     {
         // Arrange
         var repository = new FakeProductRepository();
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var request = new CreateProductRequest(
             "Monitor",
@@ -92,7 +94,7 @@ public sealed class ProductServiceTests
             )
         );
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var request = new CreateProductRequest(
             "Outro Notebook",
@@ -109,7 +111,7 @@ public sealed class ProductServiceTests
             result.Status
         );
 
-        Assert.Equal(1, repository.SaveCalls);
+        Assert.Equal(0, repository.SaveCalls);
 
         Assert.Equal(1, await repository.CountAsync());
     }
@@ -129,13 +131,13 @@ public sealed class ProductServiceTests
             product
         );
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
 
         var exists = await service.ExistsByIdAsync(product.Id);
 
         Assert.True(exists);
-        Assert.Equal(1, repository.SaveCalls);
+        Assert.Equal(0, repository.SaveCalls);
     }
 
     [Fact]
@@ -153,14 +155,14 @@ public sealed class ProductServiceTests
             product
         );
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var newGuid = Guid.NewGuid();
 
         var exists = await service.ExistsByIdAsync(newGuid);
 
         Assert.False(exists);
-        Assert.Equal(1, repository.SaveCalls);
+        Assert.Equal(0, repository.SaveCalls);
     }
     [Fact]
     public async Task CountAsync()
@@ -189,12 +191,12 @@ public sealed class ProductServiceTests
             )
         );
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var totalCount = await service.CountAsync();
 
         Assert.Equal(3, totalCount);
-        Assert.Equal(3, repository.SaveCalls);
+        Assert.Equal(0, repository.SaveCalls);
     }
 
     [Fact]
@@ -210,7 +212,7 @@ public sealed class ProductServiceTests
 
         await repository.AddAsync(product);
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var result = await service.GetByIdAsync(product.Id);
 
@@ -233,7 +235,7 @@ public sealed class ProductServiceTests
 
         await repository.AddAsync(product);
 
-        var service = new ProductService(repository);
+        var service = new ProductService(repository, Mock.Of<IPublishEndpoint>());
 
         var id = Guid.NewGuid();
 

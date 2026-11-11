@@ -20,9 +20,15 @@ public sealed class FakeProductRepository : IProductRepository
         }
 
         _products.Add(product);
-        SaveCalls++;
+
 
         return Task.CompletedTask;
+    }
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SaveCalls++;
+        return Task.FromResult(1);
     }
 
     public Task<Product?> GetByIdAsync(

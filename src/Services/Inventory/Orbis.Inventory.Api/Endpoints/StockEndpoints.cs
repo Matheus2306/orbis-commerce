@@ -1,6 +1,8 @@
 
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Orbis.Inventory.Api.Application;
+using Orbis.Inventory.Api.Consumers;
 using Orbis.Inventory.Api.Contracts;
 using Orbis.Inventory.Api.Data;
 using Orbis.Inventory.Api.Domain;
@@ -130,6 +132,43 @@ public static class StockEndpoints
 
             return Results.Ok(stocks);
         });
+
+        group.MapPost("/{productId}/reserve", async (
+            Guid productId,
+            ReservedStockRequest request,
+            IStockReservationService service,
+            CancellationToken ct) =>
+        {
+            var result = await service.ReserveAsync(
+                productId,
+                request.Quantity,
+                ct);
+
+            return result switch
+            {
+                ReservationStatus.Reserved => Results.Ok(new
+                {
+                    message = "Estoque reservado.",
+                    productId,
+                    quantity = request.Quantity
+                }),
+                ReservationStatus.insufficientStock => Results.Conflict(new
+                {
+                    error = "Estoque insuficiente."
+                }),
+                ReservationStatus.NotFound => Results.NotFound(new
+                {
+                    error = "Estoque não encontrado."
+                }),
+                ReservationStatus.invalidQuantity => Results.BadRequest(new
+                {
+                    error = "Quantidade inválida."
+                }),
+
+                _ => Results.StatusCode(500)
+            };
+        });
+
 
         return app;
     }

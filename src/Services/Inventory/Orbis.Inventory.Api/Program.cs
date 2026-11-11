@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Orbis.Inventory.Api.Application;
 using Orbis.Inventory.Api.Consumers;
 using Orbis.Inventory.Api.Data;
 using Orbis.Inventory.Api.Endpoints;
@@ -14,6 +15,8 @@ var connectionString = builder.Configuration
 
 builder.Services.AddDbContext<InventoryDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 
 // MassTransit config
 builder.Services.AddMassTransit(x =>

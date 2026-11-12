@@ -1,4 +1,3 @@
-
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Orbis.Inventory.Api.Domain;

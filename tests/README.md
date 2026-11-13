@@ -1,32 +1,13 @@
 # Testes dos serviços
 
-Requisito: SDK .NET 10.
+Consulte o [guia de testes](../docs/TESTING.md) para projetos, ferramentas, comandos e lacunas de cobertura.
 
-Executar testes locais (Catalog com mocks e Inventory com SQLite em memória):
+O estado atual contém referências de enum desatualizadas nos testes de Inventory, que impedem compilar esse projeto. Os filtros por categoria não evitam a compilação. A documentação não declara testes aprovados.
 
-```powershell
-dotnet test OrbisCommerce.slnx --filter "Category!=Docker"
-```
-
-Executar toda a suíte, incluindo PostgreSQL (Docker em execução):
+Para executar Catalog unitário separadamente, a partir da raiz:
 
 ```powershell
-dotnet test OrbisCommerce.slnx
+dotnet test tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj
 ```
 
-Executar somente os testes com PostgreSQL:
-
-```powershell
-dotnet test OrbisCommerce.slnx --filter "Category=Docker"
-```
-
-- Catalog: validação, normalização, consultas, publicação de ProductCreated antes do commit,
-  conflito de SKU, propagação de falhas e leitura/invalidação de cache.
-- Inventory: validação, produto ausente, saldo disponível, reservas sucessivas,
-  persistência, cancelamento e isolamento entre produtos.
-- Concorrência: 20 reservas disputam 10 unidades em PostgreSQL, usando contextos independentes;
-  exatamente 10 devem ser aceitas, sem ultrapassar o saldo.
-
-Os testes SQLite exercitam ExecuteUpdateAsync em um banco relacional descartável.
-Eles não substituem a validação de migrações e concorrência no PostgreSQL.
-Os testes com a categoria Docker criam e descartam seus próprios containers PostgreSQL.
+Os testes PostgreSQL usam Testcontainers e exigem Docker. Consulte também o [ambiente de desenvolvimento](../docs/DEVELOPMENT.md).

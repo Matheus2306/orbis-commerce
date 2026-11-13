@@ -120,7 +120,37 @@ services:
       postgres:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy 
+
+  order-api:
+    build:
+      context: ./src
+      dockerfile: Services/Order/Orbis.Order.Api/Dockerfile
+
+    image: orbis-order-api:1.0
+    container_name: orbis-order-api
+
+    restart: unless-stopped
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+
+      ConnectionStrings__OrderDb: "Host=postgres;Port=5432;Database=orbis_orders;Username=orbis;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}"
+
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: orbis
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:?Defina RABBITMQ_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5082:8080"
+
+    depends_on:
+      postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 
 volumes:
   postgres_data:

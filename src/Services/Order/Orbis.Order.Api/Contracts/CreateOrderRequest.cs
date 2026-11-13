@@ -2,7 +2,4 @@ using System;
 
 namespace Orbis.Order.Api.Contracts;
 
-public class CreateOrderRequest
-{
-
-}
+public sealed record CreateOrderRequest(Guid ProductId, int Quantity);

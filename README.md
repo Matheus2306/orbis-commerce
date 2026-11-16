@@ -169,6 +169,9 @@ Há organização por serviço e por responsabilidade, injeção de dependência
 
 Ainda não há autenticação/autorização, frontend, checkout completo, pagamento, tracing distribuído ou configuração de deploy. O liveness não verifica banco, cache ou broker. Há um workflow de CI em `.github/workflows/ci.yml` para build e testes; seu resultado remoto não foi verificado nesta revisão. Não há licença definida no repositório inspecionado; nenhuma licença foi presumida.
 
+## Status do CI
+![CI](https://github.com/matheus2306/orbis-commerce/actions/workflows/ci.yml/badge.svg)
+
 ## Documentação
 
 - [Arquitetura](docs/ARCHITECTURE.md)
@@ -179,3 +182,4 @@ Ainda não há autenticação/autorização, frontend, checkout completo, pagame
 - [Segurança](SECURITY.md)
 - [Contribuição](CONTRIBUTING.md)
 - [Checklist de publicação e evidências da revisão](docs/PUBLICATION_CHECKLIST.md)
+

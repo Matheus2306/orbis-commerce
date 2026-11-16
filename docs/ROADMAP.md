@@ -26,14 +26,14 @@ Itens marcados significam presença de implementação, não homologação ou ap
 | Pedido e reserva | Evento de solicitação, entidade e estados do pedido | Consumidor em Inventory, eventos de resultado e consumidores de retorno em Order |
 | Transição de pedido | Métodos `ConfirmReservation`/`RejectReservation` | Integração desses métodos em fluxos de aplicação |
 | Existência de produto | Rotas registradas por SKU e ID | Corrigir origem dos parâmetros; retornar resultado na rota por ID |
-| Testes Inventory | Cenários SQLite/PostgreSQL | Atualizar enum, comportamento esperado e cobertura da reserva por pedido/liberação |
-| Execução em containers | Imagens, portas e serviços definidos | Alinhar capitalização do Dockerfile Inventory e validar execução limpa |
+| Testes Inventory | Cenários SQLite/PostgreSQL | Ampliar cobertura da reserva por pedido/liberação |
+| Execução em containers | Imagens, portas e serviços definidos | Validar execução limpa com Docker |
 
 ## Prioridade 1 — publicação reproduzível
 
-- [ ] Corrigir referências de enum nos testes Inventory e decidir a regra da sobrecarga antiga para quantidade inválida.
+- [x] Corrigir as referências de enum nos testes Inventory, preservando a regra existente para quantidade inválida.
 - [ ] Corrigir as consultas de existência e adicionar verificação dos contratos HTTP.
-- [ ] Alinhar `Dockerfile`/`dockerfile` entre arquivo e Compose para checkouts sensíveis a maiúsculas.
+- [x] Alinhar o caminho do Compose ao arquivo `dockerfile` versionado em Inventory.
 - [ ] Atualizar os arquivos `.http`, que ainda chamam `/weatherforecast` inexistente.
 - [ ] Executar restore/build e testes em ambiente com Docker; registrar apenas resultados observados.
 - [ ] Validar migrations dos três serviços em bancos vazios e avaliar alinhamento de EF/Npgsql/MassTransit, incluindo referências `10.*` de Order.
@@ -55,15 +55,15 @@ Itens marcados significam presença de implementação, não homologação ou ap
 | Tema | Proposta, ainda não implementada |
 | --- | --- |
 | Autenticação/autorização | Definir identidade, perfis e permissões por operação |
-| CI/CD | Pipeline de restore, build, testes, validação de migrations e imagens; publicação condicionada a evidências |
+| CI/CD | CI de restore/build/testes já definido; validar execução remota e ampliar para migrations, imagens e deploy |
 | Observabilidade | Readiness, logs correlacionados, métricas, tracing e acompanhamento de filas/outbox |
 | Segurança | Segredos externos, menor privilégio, transporte protegido, revisão de dependências e limitação de requisições |
 | Deploy | Definir plataforma, provisionamento, migrations controladas, backup e recuperação |
 | Frontend | Cliente para demonstrar catálogo, estoque e estado dos pedidos |
 | Robustez | Reconciliação de estoque ausente, tratamento de mensagens com falha e testes de indisponibilidade |
 
-Não há frontend, deploy publicado, pipeline, autenticação ou métricas de desempenho comprovadas no estado documentado.
+Não há frontend, deploy publicado ou autenticação ou métricas de desempenho comprovadas no estado documentado.
 
 ## Evidência da revisão de publicação
 
-Em 16/11/2026, os 33 testes unitários de Catalog passaram, mas o build da solução falhou nos testes Inventory. A validação completa com Docker e restore limpo continua pendente. As regras Git/Docker de exclusão foram ampliadas; o [checklist de publicação](PUBLICATION_CHECKLIST.md) reúne evidências, verificações pendentes e tópicos sugeridos para o GitHub.
+Em 16/11/2026, após corrigir os testes Inventory, o build da solução passou com zero erros e zero avisos. Os testes sem Docker passaram: 33 de Catalog e 13 de Inventory (46 no total). Docker não está disponível neste ambiente; testes PostgreSQL/Testcontainers e validação do Compose em execução continuam pendentes. O [checklist de publicação](PUBLICATION_CHECKLIST.md) reúne as pendências restantes.

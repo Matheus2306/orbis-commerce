@@ -8,7 +8,7 @@ Projeto educacional e de portfólio de desenvolvimento backend .NET. Não repres
 
 O código implementa cadastro e consulta de produtos, operações de estoque e criação de pedidos. A integração `ProductCreated` cria o estoque inicial de forma assíncrona. O fluxo de pedidos está **parcialmente implementado**: publica `StockReservationRequested`, mas não existe consumidor desse evento nem processamento de confirmação/rejeição. Os pedidos permanecem em `PendingReservation` pelos fluxos disponíveis.
 
-A inspeção também encontrou testes de Inventory com referências a membros de enum inexistentes, duas consultas de existência com limitações no Catalog e uma divergência de capitalização no Dockerfile de Inventory. Em 16/11/2026, o build da solução confirmou cinco erros nos testes de Inventory; os 33 testes unitários de Catalog passaram. Isso não valida a solução completa, integrações ou deploy. Consulte as [pendências](docs/ROADMAP.md) e as [evidências de publicação](docs/PUBLICATION_CHECKLIST.md).
+Em 16/11/2026, após corrigir os testes Inventory, o build da solução passou com zero erros e zero avisos. Os testes sem Docker passaram: 33 de Catalog e 13 de Inventory (46 no total). Docker não está disponível neste ambiente; testes PostgreSQL/Testcontainers e validação do Compose em execução continuam pendentes. Permanecem limitações nas consultas de existência do Catalog e no fluxo de pedidos. Consulte as [pendências](docs/ROADMAP.md).
 
 ## Funcionalidades implementadas
 
@@ -128,7 +128,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-**Pendência de portabilidade:** o Compose aponta para `Services/Inventory/Orbis.Inventory.Api/Dockerfile`, mas o arquivo versionado se chama `dockerfile`. Em ambientes sensíveis a maiúsculas/minúsculas, o build pode falhar. O [guia de desenvolvimento](docs/DEVELOPMENT.md) apresenta um build explícito sem modificar o código.
+O Compose referencia `Services/Inventory/Orbis.Inventory.Api/dockerfile`, respeitando o nome e a capitalização do arquivo versionado.
 
 ## Exemplo HTTP
 
@@ -161,13 +161,13 @@ dotnet test OrbisCommerce.slnx --filter "Category!=Docker"
 dotnet test OrbisCommerce.slnx --filter "Category=Docker"
 ```
 
-Os comandos da solução estão sujeitos ao bloqueio de compilação identificado nos testes de Inventory: referências a `invalidQuantity` e `insufficientStock`, enquanto o enum atual usa `InvalidQuantity` e `InsufficientStock`. Filtrar testes não evita compilar os projetos. A sobrecarga antiga também retorna `InsufficientStock` para quantidade inválida. Veja [TESTING.md](docs/TESTING.md) para escopo, lacunas e comandos por projeto.
+Os testes sem Docker podem ser executados com o filtro acima. A sobrecarga `ReserveAsync(productId, quantity)` retorna `InsufficientStock` para quantidade não positiva; os testes preservam esse comportamento. Veja [TESTING.md](docs/TESTING.md) para resultados, escopo e lacunas.
 
 ## Padrões e limitações
 
 Há organização por serviço e por responsabilidade, injeção de dependência, Repository no Catalog, EF Core, cache-aside, eventos de integração, Transactional Outbox e controles de idempotência no estoque. As camadas estão em pastas dentro das APIs; não há uma separação completa em assemblies de domínio/aplicação/infraestrutura.
 
-Ainda não há autenticação/autorização, frontend, checkout completo, pagamento, pipeline CI/CD, tracing distribuído ou configuração de deploy. O liveness não verifica banco, cache ou broker. Não há licença definida no repositório inspecionado; nenhuma licença foi presumida.
+Ainda não há autenticação/autorização, frontend, checkout completo, pagamento, tracing distribuído ou configuração de deploy. O liveness não verifica banco, cache ou broker. Há um workflow de CI em `.github/workflows/ci.yml` para build e testes; seu resultado remoto não foi verificado nesta revisão. Não há licença definida no repositório inspecionado; nenhuma licença foi presumida.
 
 ## Documentação
 

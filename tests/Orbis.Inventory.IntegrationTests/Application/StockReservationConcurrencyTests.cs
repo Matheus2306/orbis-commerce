@@ -35,7 +35,7 @@ public sealed class StockReservationConcurrencyTests
         var results = await Task.WhenAll(requests);
 
         Assert.Equal(10, results.Count(x => x == ReservationStatus.Reserved));
-        Assert.Equal(10, results.Count(x => x == ReservationStatus.insufficientStock));
+        Assert.Equal(10, results.Count(x => x == ReservationStatus.InsufficientStock));
         await using var read = new InventoryDbContext(options);
         var stock = await read.StockItems.AsNoTracking().SingleAsync();
         Assert.Equal(10, stock.Quantity);

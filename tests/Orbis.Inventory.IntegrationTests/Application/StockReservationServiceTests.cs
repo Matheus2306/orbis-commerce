@@ -64,7 +64,7 @@ public sealed class StockReservationServiceTests : IAsyncLifetime
     public async Task Reserve_InvalidQuantity_DoesNotChangeStock(int quantity)
     {
         var stock = await Seed();
-        Assert.Equal(ReservationStatus.invalidQuantity, await _service.ReserveAsync(stock.ProductId, quantity));
+        Assert.Equal(ReservationStatus.InsufficientStock, await _service.ReserveAsync(stock.ProductId, quantity));
         await AssertUnchanged(stock);
     }
 
@@ -76,7 +76,7 @@ public sealed class StockReservationServiceTests : IAsyncLifetime
     public async Task Reserve_InsufficientAvailability_DoesNotChangeStock(int total, int reserved, int requested)
     {
         var stock = await Seed(total, reserved);
-        Assert.Equal(ReservationStatus.insufficientStock, await _service.ReserveAsync(stock.ProductId, requested));
+        Assert.Equal(ReservationStatus.InsufficientStock, await _service.ReserveAsync(stock.ProductId, requested));
         await AssertUnchanged(stock);
     }
 
@@ -96,9 +96,9 @@ public sealed class StockReservationServiceTests : IAsyncLifetime
     {
         var stock = await Seed();
         Assert.Equal(ReservationStatus.Reserved, await _service.ReserveAsync(stock.ProductId, 5));
-        Assert.Equal(ReservationStatus.insufficientStock, await _service.ReserveAsync(stock.ProductId, 4));
+        Assert.Equal(ReservationStatus.InsufficientStock, await _service.ReserveAsync(stock.ProductId, 4));
         Assert.Equal(ReservationStatus.Reserved, await _service.ReserveAsync(stock.ProductId, 3));
-        Assert.Equal(ReservationStatus.insufficientStock, await _service.ReserveAsync(stock.ProductId, 1));
+        Assert.Equal(ReservationStatus.InsufficientStock, await _service.ReserveAsync(stock.ProductId, 1));
         var saved = await _db.StockItems.AsNoTracking().SingleAsync();
         Assert.Equal(10, saved.ReservedQuantity);
         Assert.Equal(0, saved.AvaliableQuantity);

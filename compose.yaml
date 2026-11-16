@@ -97,7 +97,7 @@ services:
   inventory-api:
     build:
       context: ./src
-      dockerfile: Services/Inventory/Orbis.Inventory.Api/Dockerfile
+      dockerfile: Services/Inventory/Orbis.Inventory.Api/dockerfile
 
     image: orbis-inventory-api:1.0
     container_name: orbis-inventory-api

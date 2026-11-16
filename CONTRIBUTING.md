@@ -22,7 +22,7 @@ Prefira commits pequenos e focados com mensagens que expliquem a mudança. Prefi
 - Inclua testes relevantes para novas regras ou correções; para documentação, valide exemplos, links e consistência com o código.
 - Revise o diff para excluir arquivos locais, credenciais e mudanças não relacionadas.
 
-Não há template de PR, política de aprovação ou CI obrigatório configurado no repositório inspecionado. As orientações acima estabelecem uma prática de revisão, sem afirmar que exista automação para garanti-la.
+Há um workflow de CI em `.github/workflows/ci.yml` para build e testes. Não foi verificado se existem regras remotas de proteção de branch ou checks obrigatórios. Não há template de PR versionado.
 
 ## Verificações antes de contribuir
 
@@ -38,7 +38,7 @@ git diff --check
 git status --short
 ```
 
-O estado atual dos testes de Inventory impede compilar a solução por referências de enum desatualizadas. Registre esse bloqueio separadamente de regressões introduzidas pela contribuição. Não declare a suíte completa aprovada apenas porque os testes de Catalog passaram. Veja [TESTING.md](docs/TESTING.md).
+O build e os 46 testes sem Docker passaram na revisão de 16/11/2026. Execute também os testes com Docker antes de declarar a suíte completa aprovada. Veja [TESTING.md](docs/TESTING.md).
 
 Para mudanças exclusivamente documentais, confira caminhos, blocos de código, diagramas Mermaid e exemplos sem segredos. Não é necessário alterar o código-fonte para fazer o texto parecer executável; documente os limites existentes. Antes de publicar, percorra o [checklist de publicação](docs/PUBLICATION_CHECKLIST.md); não inclua arquivos ignorados à força sem revisar seu conteúdo.
 

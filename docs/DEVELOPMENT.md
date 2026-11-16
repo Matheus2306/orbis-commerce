@@ -2,7 +2,7 @@
 
 [Voltar ao README](../README.md)
 
-Os comandos abaixo usam PowerShell a partir da raiz do repositório. O procedimento documenta a configuração existente; não pressupõe que os problemas listados no [roadmap](ROADMAP.md) estejam corrigidos.
+Os comandos abaixo usam PowerShell a partir da raiz do repositório. O procedimento documenta a configuração existente; mantém as limitações ainda abertas no [roadmap](ROADMAP.md).
 
 ## Ferramentas
 
@@ -86,7 +86,7 @@ dotnet restore OrbisCommerce.slnx
 dotnet build OrbisCommerce.slnx --no-restore
 ```
 
-O build da solução inclui os testes de Inventory, que referenciam membros de enum inexistentes no estado inspecionado. Para verificar as APIs separadamente:
+O build da solução inclui todos os projetos de testes. Para verificar as APIs separadamente:
 
 ```powershell
 dotnet build src/Services/Catalog/Orbis.Catalog.Api/Orbis.Catalog.Api.csproj
@@ -148,15 +148,7 @@ docker compose up -d --build
 docker compose logs --tail 100 catalog-api inventory-api order-api
 ```
 
-Os Dockerfiles usam `./src` como contexto, copiam o projeto de contratos, restauram e publicam em Release. Inventory tem arquivo `dockerfile` minúsculo, mas o Compose referencia `Dockerfile`. Se ocorrer erro de arquivo ausente, um caminho alternativo sem editar o Compose é:
-
-```powershell
-docker build -f src/Services/Inventory/Orbis.Inventory.Api/dockerfile -t orbis-inventory-api:1.0 ./src
-docker compose build catalog-api order-api
-docker compose up -d --no-build
-```
-
-Isso usa a tag já declarada no Compose. A correção definitiva de capitalização permanece no roadmap. Catalog depende apenas da saúde de PostgreSQL no Compose, embora também use Redis e RabbitMQ; iniciar a infraestrutura com `--wait` reduz essa corrida de inicialização.
+Os Dockerfiles usam `./src` como contexto, copiam o projeto de contratos, restauram e publicam em Release. O Compose referencia o nome real `Services/Inventory/Orbis.Inventory.Api/dockerfile`, com inicial minúscula. Catalog depende apenas da saúde de PostgreSQL no Compose, embora também use Redis e RabbitMQ; iniciar a infraestrutura com `--wait` reduz essa corrida de inicialização.
 
 Verificação HTTP por Compose:
 
@@ -182,7 +174,7 @@ dotnet test tests/Orbis.Catalog.IntegrationTests/Orbis.Catalog.IntegrationTests.
 dotnet test tests/Orbis.Inventory.IntegrationTests/Orbis.Inventory.IntegrationTests.csproj
 ```
 
-Veja [TESTING.md](TESTING.md) antes de interpretar os resultados, especialmente o bloqueio atual de Inventory.
+Veja [TESTING.md](TESTING.md) antes de interpretar os resultados, incluindo as limitações dos testes sem Docker.
 
 ## Troubleshooting
 
@@ -192,8 +184,6 @@ Veja [TESTING.md](TESTING.md) antes de interpretar os resultados, especialmente 
 | Host `rabbitmq`/`postgres` não encontrado | Fora dos containers, use `localhost`; dentro, use os nomes dos serviços |
 | Relação/tabela inexistente | Aplique migrations de cada API; não há migração automática no startup |
 | Banco Inventory/Order inexistente | Prepare os bancos ou use EF com usuário que possa criá-los |
-| Build de Inventory no Docker não encontra Dockerfile | Use o nome minúsculo real no comando de build explícito acima |
-| Erro CS0117 nos testes Inventory | Corrigir futuramente as referências `invalidQuantity`/`insufficientStock`; filtrar testes não evita compilação |
 | Pedido permanece pendente | O consumidor de `StockReservationRequested` não foi implementado |
 | 409 ao criar estoque após cadastrar produto | O consumidor pode já ter criado saldo zero; consulte e use `/add` |
 | Consulta de existência retorna vazio ou exige query | Limitações dos handlers documentadas em [API.md](API.md) |
@@ -202,4 +192,4 @@ Veja [TESTING.md](TESTING.md) antes de interpretar os resultados, especialmente 
 | Liveness responde, mas operações falham | Liveness não verifica PostgreSQL, RabbitMQ ou Redis |
 | Credenciais falham após editar `.env` | Confira credenciais persistidas no volume; não apague dados como primeira solução |
 
-Na revisão de 16/11/2026, o SDK disponível era `10.0.403`. O build sem restore confirmou cinco erros CS0117 em Inventory; os 33 testes unitários de Catalog passaram. Docker não foi encontrado no PATH nem no caminho padrão conferido, portanto `docker compose config --quiet`, containers, migrations e testes PostgreSQL não foram executados. Veja os comandos e limites da evidência em [TESTING.md](TESTING.md).
+Em 16/11/2026, após corrigir os testes Inventory, o build da solução passou com zero erros e zero avisos. Os testes sem Docker passaram: 33 de Catalog e 13 de Inventory (46 no total). Docker não está disponível neste ambiente; testes PostgreSQL/Testcontainers e validação do Compose em execução continuam pendentes. Veja os comandos em [TESTING.md](TESTING.md).

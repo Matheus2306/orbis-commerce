@@ -2,15 +2,15 @@
 
 [Voltar ao README](../README.md)
 
-Revisão local em **16/11/2026**, sobre o commit `557a751` e as alterações documentais/de exclusão desta revisão. Nenhuma publicação, alteração de credenciais, commit, push ou reescrita de histórico foi realizada. O Git estava limpo antes das alterações.
+Revisão inicial em **16/11/2026** sobre o commit `557a751`; correção posterior dos testes e do caminho Docker sobre `87568b0`, preservando o trabalho existente. O Git estava limpo antes de cada etapa. A correção posterior foi autorizada para commit e push; não altera credenciais nem reescreve histórico.
 
 ## Evidências disponíveis
 
 | Verificação | Resultado e limite |
 | --- | --- |
 | Código e documentação | Revisados três serviços, contratos, endpoints, consumidores, configurações, migrations, testes e Dockerfiles; documentação correta preservada |
-| Build | `dotnet build OrbisCommerce.slnx --no-restore --nologo -v minimal`: cinco erros CS0117 nos testes Inventory; contratos, três APIs e projetos de teste Catalog compilaram |
-| Testes unitários Catalog | `dotnet test tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj --no-build --no-restore --nologo -v minimal`: 33 aprovados, zero falhas, zero ignorados |
+| Build | `dotnet build OrbisCommerce.slnx --no-restore --nologo -v minimal`: êxito, zero erros e zero avisos após a correção |
+| Testes sem Docker | `dotnet test OrbisCommerce.slnx --no-build --no-restore --filter "Category!=Docker" --nologo -v minimal`: 33 Catalog e 13 Inventory aprovados, zero falhas |
 | Dependências | Pacotes já restaurados foram utilizados; restore limpo não validado |
 | Docker/Compose | CLI ausente no PATH e no caminho padrão conferido; validação oficial de sintaxe e execução indisponíveis |
 | Segredos nos arquivos atuais | Nenhum candidato detectado pela busca heurística nos 96 arquivos preparados (95 rastreados e o novo checklist); exemplos mantêm valores fictícios |
@@ -19,9 +19,9 @@ Revisão local em **16/11/2026**, sobre o commit `557a751` e as alterações doc
 | Compose por inspeção | Senhas interpoladas de variáveis obrigatórias; portas vinculadas a `127.0.0.1`; bancos lógicos separados na mesma instância/usuário |
 | Links e exemplos | 65 links relativos, 24 blocos PowerShell e cinco blocos JSON validados; caminhos de projetos conferidos; quatro diagramas Mermaid revisados estruturalmente, sem renderização |
 | Exclusões | 19 caminhos representativos verificados com `git check-ignore --no-index`, incluindo preservação de `.env.example` e código-fonte; nenhum arquivo rastreado coincide com as regras de exclusão |
-| Diff | `git diff --check` sem erros; apenas documentos e arquivos de exclusão alterados, sem mudanças no código, migrations, Compose ou credenciais |
+| Diff | Correção posterior limitada a dois arquivos de testes, caminho do Dockerfile no Compose e documentação; lógica da aplicação e migrations preservadas |
 
-A busca de segredos examinou padrões de chaves privadas, tokens de provedores, senhas literais em configuração/connection strings/chamadas C#, segredos literais e URIs com credenciais. Não exibiu valores nem acessou o conteúdo de User Secrets ou do `.env` local. É uma revisão heurística, não uma garantia de ausência de segredos: não cobre referências remotas não disponíveis, reflogs/objetos inalcançáveis, conteúdo codificado arbitrariamente ou segredos sem padrão reconhecível. Nenhuma credencial foi testada em serviço externo.
+A busca de segredos da revisão inicial examinou padrões de chaves privadas, tokens de provedores, senhas literais em configuração/connection strings/chamadas C#, segredos literais e URIs com credenciais. Não exibiu valores nem acessou o conteúdo de User Secrets ou do `.env` local. É uma revisão heurística, não uma garantia de ausência de segredos: não cobre referências remotas não disponíveis, reflogs/objetos inalcançáveis, conteúdo codificado arbitrariamente ou segredos sem padrão reconhecível. Nenhuma credencial foi testada em serviço externo.
 
 ## Proteção dos arquivos
 
@@ -49,9 +49,7 @@ A busca de segredos examinou padrões de chaves privadas, tokens de provedores, 
 
 | Prioridade | Pendência | Evidência/caminho |
 | --- | --- | --- |
-| Alta | Corrigir os cinco erros CS0117 antes de declarar build da solução aprovado | `tests/Orbis.Inventory.IntegrationTests/Application/StockReservationServiceTests.cs` e `StockReservationConcurrencyTests.cs` |
 | Alta | Validar restore limpo, migrations e testes PostgreSQL em ambiente com Docker | [Guia de testes](TESTING.md) e [desenvolvimento](DEVELOPMENT.md) |
-| Alta | Corrigir diferença entre `Dockerfile` no Compose e `dockerfile` versionado em Inventory para portabilidade | `compose.yaml`; `src/Services/Inventory/Orbis.Inventory.Api/dockerfile` |
 | Média | Corrigir binding e retorno das rotas de existência | `src/Services/Catalog/Orbis.Catalog.Api/Endpoints/ProductEndpoints.cs` |
 | Média | Atualizar os arquivos `.http` com `/weatherforecast` inexistente | Arquivos `.http` das três APIs |
 | Evolução funcional | Implementar consumidor de reserva e retorno ao Order | `StockReservationRequested` existe, mas não há consumidor registrado |
@@ -73,11 +71,12 @@ docker compose config --quiet
 
 O último comando valida a configuração sem imprimir valores interpolados. A saída de `git ls-files -ci --exclude-standard` deve ser analisada: ela identifica arquivos já rastreados que agora coincidem com regras de exclusão. Não os remova automaticamente.
 
-- [ ] Executar os comandos de build/testes descritos em [TESTING.md](TESTING.md) após resolver bloqueios.
+- [x] Executar build e testes sem Docker após corrigir as referências de enum.
+- [ ] Executar testes PostgreSQL/Testcontainers e validar Compose em ambiente com Docker.
 - [ ] Rever links relativos, caminhos, exemplos e diff final.
 - [ ] Confirmar que não há novas credenciais, logs ou certificados no conjunto que será publicado.
 - [ ] Escolher descrição e tópicos do GitHub sem prometer funcionalidades planejadas.
-- [ ] Decidir explicitamente sobre publicação; esta tarefa não realizou nenhuma operação remota.
+- [ ] Decidir sobre visibilidade pública e licença; o envio das correções ao remoto não valida os requisitos de produção.
 
 ## Tópicos sugeridos para o GitHub
 

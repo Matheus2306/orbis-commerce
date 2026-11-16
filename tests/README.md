@@ -2,7 +2,7 @@
 
 Consulte o [guia de testes](../docs/TESTING.md) para projetos, ferramentas, comandos e lacunas de cobertura.
 
-O estado atual contém referências de enum desatualizadas nos testes de Inventory, que impedem compilar esse projeto. Os filtros por categoria não evitam a compilação. Em 16/11/2026, os 33 testes unitários de Catalog passaram; a solução completa continua bloqueada. Os comandos executados e limites dessa evidência estão no guia de testes.
+Em 16/11/2026, após corrigir os testes Inventory, o build da solução passou com zero erros e zero avisos. Os testes sem Docker passaram: 33 de Catalog e 13 de Inventory (46 no total). Docker não está disponível neste ambiente; testes PostgreSQL/Testcontainers e validação do Compose em execução continuam pendentes. Consulte o guia de testes para comandos e limites da validação.
 
 Para executar Catalog unitário separadamente, a partir da raiz:
 

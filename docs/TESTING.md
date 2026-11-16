@@ -28,11 +28,9 @@ Inventory SQLite: abre conexão em memória durante cada teste, usa `EnsureCreat
 
 Inventory concorrência: o cenário escrito dispara 20 solicitações de uma unidade sobre saldo 10, com contextos separados, esperando 10 reservas aceitas e 10 recusadas. Essa é a expectativa do teste, não um resultado de execução ou benchmark. O teste usa PostgreSQL via Testcontainers e `MigrateAsync`.
 
-## Bloqueio identificado por inspeção
+## Correção dos testes Inventory
 
-Os testes Inventory referenciam `ReservationStatus.invalidQuantity` e `ReservationStatus.insufficientStock`. O enum atual declara `InvalidQuantity` e `InsufficientStock`; C# distingue maiúsculas de minúsculas. Essas referências impedem a compilação do projeto de testes no estado inspecionado.
-
-Há também divergência comportamental: a sobrecarga `ReserveAsync(productId, quantity)` retorna `InsufficientStock` para quantidade não positiva, enquanto os testes esperam o antigo resultado de quantidade inválida. Corrigir apenas a capitalização não resolve essa diferença.
+As cinco referências inválidas ao enum foram corrigidas. Os testes usam `InsufficientStock`, inclusive para quantidade não positiva, conforme o comportamento existente da sobrecarga `ReserveAsync(productId, quantity)`. A lógica da aplicação não foi alterada.
 
 Os endpoints usam a sobrecarga com `OrderId`, que retorna `ReservationResult`, persiste `StockReservation` e tem regras de idempotência. Os testes existentes não exercitam esse fluxo nem `ReleaseAsync`.
 
@@ -47,11 +45,11 @@ dotnet test tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj
 # Catalog integração: exige Docker Linux disponível.
 dotnet test tests/Orbis.Catalog.IntegrationTests/Orbis.Catalog.IntegrationTests.csproj
 
-# Inventory: sujeito ao bloqueio de compilação descrito acima.
+# Inventory: SQLite sem Docker e PostgreSQL com Docker.
 dotnet test tests/Orbis.Inventory.IntegrationTests/Orbis.Inventory.IntegrationTests.csproj --filter "Category!=Docker"
 dotnet test tests/Orbis.Inventory.IntegrationTests/Orbis.Inventory.IntegrationTests.csproj --filter "Category=Docker"
 
-# Solução completa, após resolver os bloqueios.
+# Solução: use Docker para executar também os testes PostgreSQL.
 dotnet test OrbisCommerce.slnx --filter "Category!=Docker"
 dotnet test OrbisCommerce.slnx --filter "Category=Docker"
 dotnet test OrbisCommerce.slnx
@@ -80,11 +78,11 @@ Analise os arquivos gerados antes de publicar qualquer percentual. Não há thre
 
 ## Evidência desta revisão
 
-A revisão inicial de 13/11/2026 foi estática. Na revisão de 16/11/2026, com SDK 10.0.403, foram executados:
+Em 16/11/2026, após corrigir os testes Inventory, o build da solução passou com zero erros e zero avisos. Os testes sem Docker passaram: 33 de Catalog e 13 de Inventory (46 no total). Docker não está disponível neste ambiente; testes PostgreSQL/Testcontainers e validação do Compose em execução continuam pendentes.
 
-| Comando | Resultado observado |
+| Comando executado | Resultado |
 | --- | --- |
-| `dotnet build OrbisCommerce.slnx --no-restore --nologo -v minimal` | Falhou com cinco erros CS0117 nos testes Inventory. Contratos, três APIs e projetos de teste Catalog compilaram; zero avisos nessa execução |
-| `dotnet test tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj --no-build --no-restore --nologo -v minimal` | 33 aprovados, zero falhas, zero ignorados |
+| `dotnet build OrbisCommerce.slnx --no-restore --nologo -v minimal` | Êxito; zero avisos e zero erros |
+| `dotnet test OrbisCommerce.slnx --no-build --no-restore --filter "Category!=Docker" --nologo -v minimal` | 33 testes Catalog e 13 Inventory aprovados; zero falhas |
 
-Foram usados os pacotes já restaurados no ambiente; não foi validado um restore limpo. Docker não foi encontrado no PATH nem no caminho padrão de instalação conferido. Os testes PostgreSQL, migrations em banco e execução dos containers não foram realizados. Os testes Inventory não puderam executar por falha de compilação. Não houve coleta de cobertura ou medição de desempenho. A aprovação de Catalog unitário não representa aprovação da suíte completa.
+SDK 10.0.403; pacotes previamente restaurados. Não foi validado restore limpo, cobertura ou desempenho. O projeto Catalog.IntegrationTests não possui casos que correspondam ao filtro sem Docker. Os testes PostgreSQL ficaram fora desta execução, não foram aprovados nem marcados como ignorados pelo runner. O workflow de CI existente executa a suíte completa, mas seu resultado remoto não foi verificado nesta revisão.

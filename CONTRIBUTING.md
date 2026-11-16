@@ -40,6 +40,6 @@ git status --short
 
 O estado atual dos testes de Inventory impede compilar a solução por referências de enum desatualizadas. Registre esse bloqueio separadamente de regressões introduzidas pela contribuição. Não declare a suíte completa aprovada apenas porque os testes de Catalog passaram. Veja [TESTING.md](docs/TESTING.md).
 
-Para mudanças exclusivamente documentais, confira caminhos, blocos de código, diagramas Mermaid e exemplos sem segredos. Não é necessário alterar o código-fonte para fazer o texto parecer executável; documente os limites existentes.
+Para mudanças exclusivamente documentais, confira caminhos, blocos de código, diagramas Mermaid e exemplos sem segredos. Não é necessário alterar o código-fonte para fazer o texto parecer executável; documente os limites existentes. Antes de publicar, percorra o [checklist de publicação](docs/PUBLICATION_CHECKLIST.md); não inclua arquivos ignorados à força sem revisar seu conteúdo.
 
 Para possíveis vulnerabilidades, siga [SECURITY.md](SECURITY.md) e evite detalhes sensíveis em discussões públicas.

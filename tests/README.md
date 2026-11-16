@@ -2,7 +2,7 @@
 
 Consulte o [guia de testes](../docs/TESTING.md) para projetos, ferramentas, comandos e lacunas de cobertura.
 
-O estado atual contém referências de enum desatualizadas nos testes de Inventory, que impedem compilar esse projeto. Os filtros por categoria não evitam a compilação. A documentação não declara testes aprovados.
+O estado atual contém referências de enum desatualizadas nos testes de Inventory, que impedem compilar esse projeto. Os filtros por categoria não evitam a compilação. Em 16/11/2026, os 33 testes unitários de Catalog passaram; a solução completa continua bloqueada. Os comandos executados e limites dessa evidência estão no guia de testes.
 
 Para executar Catalog unitário separadamente, a partir da raiz:
 

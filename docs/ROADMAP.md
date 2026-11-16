@@ -63,3 +63,7 @@ Itens marcados significam presença de implementação, não homologação ou ap
 | Robustez | Reconciliação de estoque ausente, tratamento de mensagens com falha e testes de indisponibilidade |
 
 Não há frontend, deploy publicado, pipeline, autenticação ou métricas de desempenho comprovadas no estado documentado.
+
+## Evidência da revisão de publicação
+
+Em 16/11/2026, os 33 testes unitários de Catalog passaram, mas o build da solução falhou nos testes Inventory. A validação completa com Docker e restore limpo continua pendente. As regras Git/Docker de exclusão foram ampliadas; o [checklist de publicação](PUBLICATION_CHECKLIST.md) reúne evidências, verificações pendentes e tópicos sugeridos para o GitHub.

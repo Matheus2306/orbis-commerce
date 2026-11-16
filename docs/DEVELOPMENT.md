@@ -202,4 +202,4 @@ Veja [TESTING.md](TESTING.md) antes de interpretar os resultados, especialmente 
 | Liveness responde, mas operações falham | Liveness não verifica PostgreSQL, RabbitMQ ou Redis |
 | Credenciais falham após editar `.env` | Confira credenciais persistidas no volume; não apague dados como primeira solução |
 
-Na revisão documental de 13/11/2026, `dotnet --version` retornou `10.0.403`; `docker` não foi encontrado no terminal. Build, migrations, testes e containers não foram executados nesta tarefa. Os comandos foram conferidos contra os caminhos e configurações versionados.
+Na revisão de 16/11/2026, o SDK disponível era `10.0.403`. O build sem restore confirmou cinco erros CS0117 em Inventory; os 33 testes unitários de Catalog passaram. Docker não foi encontrado no PATH nem no caminho padrão conferido, portanto `docker compose config --quiet`, containers, migrations e testes PostgreSQL não foram executados. Veja os comandos e limites da evidência em [TESTING.md](TESTING.md).

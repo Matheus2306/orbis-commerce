@@ -76,7 +76,8 @@ sequenceDiagram
     Catalog->>CDB: Produto e ProductCreated no Bus Outbox
     CDB-->>Catalog: SaveChanges concluído
     Catalog-->>Client: 201 Created
-    CDB-->>MQ: Entrega posterior pelo MassTransit
+    Catalog->>CDB: MassTransit lê mensagens pendentes
+    Catalog->>MQ: MassTransit entrega ProductCreated
     MQ->>Inventory: ProductCreated
     Inventory->>IDB: Criar estoque zero com controle de consumo
     Note over Client,IDB: O estoque pode não existir imediatamente após o 201
@@ -107,14 +108,24 @@ A sobrecarga antiga `ReserveAsync(productId, quantity)` ainda existe: apenas inc
 ## Fluxo de pedidos incompleto
 
 ```mermaid
-flowchart LR
-    Request[POST /api/orders] --> Save[Pedido PendingReservation e Bus Outbox]
-    Save --> Response[202 Accepted]
-    Save --> Event[StockReservationRequested no RabbitMQ]
-    Event -.-> Missing[Consumidor ainda ausente]
+sequenceDiagram
+    participant Client as Cliente
+    participant Order as Order API
+    participant DB as Banco Order
+    participant MQ as RabbitMQ
+    Client->>Order: POST /api/orders com produto e quantidade
+    Order->>Order: Validar e criar PendingReservation
+    Order->>DB: SaveChanges de pedido e mensagem no Bus Outbox
+    DB-->>Order: Persistência concluída
+    Order-->>Client: 202 Accepted e Location
+    Order->>DB: MassTransit lê mensagens pendentes
+    Order->>MQ: StockReservationRequested
+    Note over Order,MQ: Fim do fluxo implementado; não há consumidor de reserva
 ```
 
 `ConfirmReservation` e `RejectReservation` existem na entidade, mas não são chamados pelos fluxos da aplicação. Não há eventos de resultado, consumidores de retorno, cancelamento automático ou compensação entre Order e Inventory. Fazer reserva manual via HTTP não altera o pedido.
+
+Os diagramas de sequência mostram um caminho de sucesso possível. A entrega pelo serviço de outbox é independente da resposta HTTP e pode ocorrer antes ou depois de o cliente recebê-la. A seta para RabbitMQ representa trabalho do MassTransit no processo da API, não uma publicação executada pelo PostgreSQL. Consumir a solicitação e devolver seu resultado são etapas **planejadas**, fora das sequências implementadas acima.
 
 ## Decisões e trade-offs observáveis
 

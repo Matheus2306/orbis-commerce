@@ -1,5 +1,49 @@
+# Configuração local e segredos; exemplos fictícios podem ser versionados.
 .env
-**/bin/
-**/obj/
+.env.*
+!.env.example
+secrets.json
+**/[Uu]ser[Ss]ecrets/
+appsettings.*.local.json
+.aws/
+.ssh/
+
+# Chaves e certificados (inclusive contêineres com chave privada).
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+id_rsa
+id_ed25519
+
+# Compilação, IDEs e ferramentas locais.
+**/[Bb]in/
+**/[Oo]bj/
 .vs/
 .vscode/
+.idea/
+.codex/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs, testes e artefatos descartáveis.
+*.log
+[Ll]ogs/
+[Tt]est[Rr]esults/
+coverage/
+coverage*.xml
+*.trx
+artifacts/
+publish/
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

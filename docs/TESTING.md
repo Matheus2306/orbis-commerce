@@ -80,4 +80,11 @@ Analise os arquivos gerados antes de publicar qualquer percentual. Não há thre
 
 ## Evidência desta revisão
 
-A revisão de 13/11/2026 inspecionou código e configurações, sem executar build ou testes. O SDK disponível foi identificado como 10.0.403; o comando Docker não estava disponível no terminal. Não há alegação de testes aprovados, métricas de performance ou cobertura medida nesta documentação.
+A revisão inicial de 13/11/2026 foi estática. Na revisão de 16/11/2026, com SDK 10.0.403, foram executados:
+
+| Comando | Resultado observado |
+| --- | --- |
+| `dotnet build OrbisCommerce.slnx --no-restore --nologo -v minimal` | Falhou com cinco erros CS0117 nos testes Inventory. Contratos, três APIs e projetos de teste Catalog compilaram; zero avisos nessa execução |
+| `dotnet test tests/Orbis.Catalog.UnitTests/Orbis.Catalog.UnitTests.csproj --no-build --no-restore --nologo -v minimal` | 33 aprovados, zero falhas, zero ignorados |
+
+Foram usados os pacotes já restaurados no ambiente; não foi validado um restore limpo. Docker não foi encontrado no PATH nem no caminho padrão de instalação conferido. Os testes PostgreSQL, migrations em banco e execução dos containers não foram realizados. Os testes Inventory não puderam executar por falha de compilação. Não houve coleta de cobertura ou medição de desempenho. A aprovação de Catalog unitário não representa aprovação da suíte completa.

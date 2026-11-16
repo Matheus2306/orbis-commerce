@@ -8,7 +8,7 @@ Projeto educacional e de portfólio de desenvolvimento backend .NET. Não repres
 
 O código implementa cadastro e consulta de produtos, operações de estoque e criação de pedidos. A integração `ProductCreated` cria o estoque inicial de forma assíncrona. O fluxo de pedidos está **parcialmente implementado**: publica `StockReservationRequested`, mas não existe consumidor desse evento nem processamento de confirmação/rejeição. Os pedidos permanecem em `PendingReservation` pelos fluxos disponíveis.
 
-A inspeção também encontrou testes de Inventory com referências a membros de enum inexistentes, duas consultas de existência com limitações no Catalog e uma divergência de capitalização no Dockerfile de Inventory. Consulte as [pendências](docs/ROADMAP.md) antes de executar a solução completa. Esta documentação não declara build, testes ou deploy aprovados.
+A inspeção também encontrou testes de Inventory com referências a membros de enum inexistentes, duas consultas de existência com limitações no Catalog e uma divergência de capitalização no Dockerfile de Inventory. Em 16/11/2026, o build da solução confirmou cinco erros nos testes de Inventory; os 33 testes unitários de Catalog passaram. Isso não valida a solução completa, integrações ou deploy. Consulte as [pendências](docs/ROADMAP.md) e as [evidências de publicação](docs/PUBLICATION_CHECKLIST.md).
 
 ## Funcionalidades implementadas
 
@@ -91,6 +91,7 @@ docs/
   DEVELOPMENT.md
   TESTING.md
   ROADMAP.md
+  PUBLICATION_CHECKLIST.md
 ```
 
 A pasta local `infra/` está vazia na inspeção e não contém provisionamento versionado. As APIs também contêm arquivos `.http`, ainda com a rota de template `/weatherforecast`, que não está implementada.
@@ -177,3 +178,4 @@ Ainda não há autenticação/autorização, frontend, checkout completo, pagame
 - [Roadmap e prioridades de publicação](docs/ROADMAP.md)
 - [Segurança](SECURITY.md)
 - [Contribuição](CONTRIBUTING.md)
+- [Checklist de publicação e evidências da revisão](docs/PUBLICATION_CHECKLIST.md)
